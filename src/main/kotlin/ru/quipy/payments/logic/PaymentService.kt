@@ -20,7 +20,8 @@ data class ExternalServiceProperties(
     val accountName: String,
     val parallelRequests: Int,
     val rateLimitPerSec: Int,
-    val request95thPercentileProcessingTime: Duration = Duration.ofSeconds(11)
+    val request95thPercentileProcessingTime: Duration = Duration.ofSeconds(11),
+    val callCost: Double
 )
 
 /**
