@@ -2,15 +2,14 @@ package ru.quipy.payments.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import ru.quipy.payments.logic.AccountState
 import ru.quipy.payments.logic.ExternalServiceProperties
 import ru.quipy.payments.logic.PaymentExternalServiceImpl
 import java.time.Duration
 
 
 @Configuration
-class ExternalServicesConfig(
-    val accountService: AccountService
-) {
+class ExternalServicesConfig {
     companion object {
         const val PRIMARY_PAYMENT_BEAN = "PRIMARY_PAYMENT_BEAN"
 
@@ -19,22 +18,28 @@ class ExternalServicesConfig(
 
         private val accountProps_1 = ExternalServiceProperties(
             // most expensive. Call costs 100
+            // min = 100
+
             "test",
             "default-1",
             parallelRequests = 10000,
             rateLimitPerSec = 100,
             request95thPercentileProcessingTime = Duration.ofMillis(1000),
-            callCost = 100.0
+            cost = 100,
+            next = null,
         )
 
         private val accountProps_2 = ExternalServiceProperties(
             // Call costs 70
+            // min = 10
+
             "test",
             "default-2",
             parallelRequests = 100,
             rateLimitPerSec = 30,
             request95thPercentileProcessingTime = Duration.ofMillis(10_000),
-            callCost = 70.0
+            cost = 70,
+            next = accountProps_1
         )
 
         private val accountProps_3 = ExternalServiceProperties(
@@ -44,7 +49,8 @@ class ExternalServicesConfig(
             parallelRequests = 30,
             rateLimitPerSec = 8,
             request95thPercentileProcessingTime = Duration.ofMillis(10_000),
-            callCost = 40.0
+            cost = 40,
+            next = accountProps_2
         )
 
         // Call costs 30
@@ -54,15 +60,12 @@ class ExternalServicesConfig(
             parallelRequests = 8,
             rateLimitPerSec = 5,
             request95thPercentileProcessingTime = Duration.ofMillis(10_000),
-            callCost = 30.0
+            cost = 30,
+            next = accountProps_3
         )
-
-        val accounts = listOf(accountProps_1, accountProps_2)
     }
 
     @Bean(PRIMARY_PAYMENT_BEAN)
     fun fastExternalService() =
-        PaymentExternalServiceImpl(
-            accountService
-        )
+        PaymentExternalServiceImpl(AccountState(accountProps_2))
 }

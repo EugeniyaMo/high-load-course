@@ -2,6 +2,7 @@ package ru.quipy.payments.logic
 
 import java.time.Duration
 import java.util.*
+import kotlin.math.min
 
 interface PaymentService {
     /**
@@ -21,7 +22,10 @@ data class ExternalServiceProperties(
     val parallelRequests: Int,
     val rateLimitPerSec: Int,
     val request95thPercentileProcessingTime: Duration = Duration.ofSeconds(11),
-    val callCost: Double
+    val cost: Int,
+    val next: ExternalServiceProperties?,
+    val theoreticalSpeed: Long = min(rateLimitPerSec.toLong(),
+        parallelRequests * Duration.ofSeconds(1).toMillis() / request95thPercentileProcessingTime.toMillis())
 )
 
 /**

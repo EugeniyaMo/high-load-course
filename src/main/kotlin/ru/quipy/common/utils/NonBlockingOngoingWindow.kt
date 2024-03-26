@@ -8,18 +8,18 @@ class NonBlockingOngoingWindow(
 ) {
     private val winSize = AtomicInteger()
  
-    fun putIntoWindow(): WindowResponse {
+    fun putIntoWindow(): Boolean {
         while (true) {
             val currentWinSize = winSize.get()
             if (currentWinSize >= maxWinSize) {
-                return WindowResponse.Fail(currentWinSize)
+                return false
             }
  
             if (winSize.compareAndSet(currentWinSize, currentWinSize + 1)) {
                 break
             }
         }
-        return WindowResponse.Success(winSize.get())
+        return true
     }
  
     fun releaseWindow() = winSize.decrementAndGet()
@@ -43,6 +43,10 @@ class OngoingWindow(
 
     fun acquire() {
         window.acquire()
+    }
+
+    fun tryAcquire(): Boolean {
+        return window.tryAcquire()
     }
 
     fun release() = window.release()
